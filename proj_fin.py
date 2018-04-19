@@ -3,7 +3,11 @@ import json
 import csv
 import sqlite3
 import pandas
+import requests
 from fin_secrets import *
+import plotly.plotly as py
+import plotly.graph_objs as go
+
 
 import codecs
 import sys
@@ -43,6 +47,34 @@ class Thread:
 
 #HELPER FUNCTIONS
 #_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+#To prepare the database and set it up so it can be written to and queried.
+def init_db():
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
+    #First Delete Tables/Clear if they already exist to provide a "fresh-start"
+    del_threads = '''
+        DROP TABLE IF EXISTS 'Threads';
+        '''
+    cur.execute(del_threads)
+    conn.commit()
+
+    stmnt_thread = '''
+        CREATE TABLE IF NOT EXISTS 'Threads'(
+        'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
+        'Author' TEXT,
+        'Title' TEXT,
+        'Num_Upvotes' INTEGER,
+        'Thread_Id' TEXT,
+        'Time_created' INTEGER,
+        'Time_Date_Created' TEXT,
+        'Date_Created' TEXT
+        )
+        '''
+    cur.execute(stmnt_thread)
+    conn.commit()
+    conn.close()
+
+#To load a passed list into the csv as a "staging technique"
 def csv_loader(lst_instances):
     cs_file = open(CSV_STORAGE, 'w', newline='')
     with cs_file:
@@ -51,6 +83,7 @@ def csv_loader(lst_instances):
     print(cols_threads)
     cs_file.close()
 
+#Simply will print a "help" dialog to allow user to understand the program's features.
 def ui_help():
     print("\n\n\n\n\n")
     print("------------------------------------------------------------------------------------")
@@ -71,12 +104,34 @@ def ui_help():
     print("      lists available commands (these instructions)")
     print("\n\n")
 
+#Will connect the staged/prepared csv with the db and load the db with relevant information.
+def db_loader():
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
 
+    cr_file = open(CSV_STORAGE, 'r')
+    ithreads_csv = csv.reader(cr_file)
+    print(ithreads_csv)
+    next(ithreads_csv, None)
+    for thread in ithreads_csv:
+        print(thread)
+        print(type(thread))
+        insertion = (thread[0], thread[1], thread[2], thread[3], thread[4], thread[5], thread[6])
+        fill_stmt = '''
+                INSERT INTO Threads (Author, Title, Num_Upvotes, Thread_Id, Time_Created, Time_Date_Created, Date_Created)
+                SELECT ?, ?, ?, ?, ?, ?, ?
+                '''
+        print(fill_stmt)
+        cur.execute(fill_stmt, insertion)
+    conn.commit()
+    cr_file.close()
+    conn.close()
 
 #MAIN FUNCTIONS
 #_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 def reddit_caller(num_threads=100):
-
+    #Blanks out the dbs and allows for a fresh write/data to work with.
+    init_db()
     #To properly execute this code and pull from reddit a user will need the information below.
     reddit = praw.Reddit(client_id=s_client_id,
                          client_secret=s_client_secret,
@@ -98,7 +153,7 @@ def reddit_caller(num_threads=100):
 
     for thread in hot_swbf:
         try:
-            print(thread.title)
+            # print(thread.title)
             author_sub = str(thread.author)
             title_sub = str(thread.title)
             ups_sub = int(thread.ups)
@@ -114,8 +169,8 @@ def reddit_caller(num_threads=100):
             my_threads.append(cur_thread)
 
             #Build a list for your cache
-            c_list = [author_sub, title_sub, ups_sub, id_sub, time_made_sub, f_date_sub, f_date_only_sub]
-            cache_storage.append(c_list)
+            t_cache_list = [author_sub, title_sub, ups_sub, id_sub, time_made_sub, f_date_sub, f_date_only_sub]
+            cache_storage.append(t_cache_list)
         except:
             pass
 
@@ -133,7 +188,67 @@ def reddit_caller(num_threads=100):
 
     #Continue on and write this information directly to CSV and load the CSV into the sqlite db
     csv_loader(cache_storage)
+    db_loader()
 
+def cache_loader():
+    pass
+    #PULL UP CACHED DATA BASED ON MENU COMMAND MANNNNNN
+
+def top_5_thread_users():
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
+    #Alphabettically ordred top users to prep for loading into a bar chart in plotly
+    users_1 = []
+    thread_ct_1 = []
+    top_user_threads = '''
+        SELECT Author, COUNT(Author)
+        FROM Threads
+        GROUP BY Author
+        ORDER BY COUNT(Author) DESC
+        '''
+    cur.execute(top_user_threads)
+    for user_thread_ct in cur:
+        print(user_thread_ct)
+        users_1.append(user_thread_ct[0])
+        thread_ct_1.append(user_thread_ct[1])
+    conn.close()
+    #The visualization steps are below which pass the top 5 to plotly to create a bar graph
+    print('\n\n\n\n\n\'')
+    print(users_1)
+    print('\n\n\n\n\n\'')
+    print(thread_ct_1)
+    users_1_top5 = users_1[:5]
+    thread_ct_1_top5 = thread_ct_1[:5]
+    #Potentially append here??
+    trace = [go.Bar(
+                x=users_1_top5,
+                y=thread_ct_1_top5
+        )]
+
+    data = trace
+    layout = go.Layout(
+    title='Top 5 Users w Most "hot" Threads',)
+    fig = go.Figure(data=data, layout=layout)
+    py.plot(fig, filename='text-hover-bar')
+
+    # py.plot(data, filename='basic-bar')
+
+    #Be sure to build at least four visualizations
+    #1. Thread with highest number of upvotes vs. Length of title
+    #2. Number of comments v Number of upvotes
+    #3. Comments by the hour?----lAST
+    #4. Most common used words in comments for 1 thread.
+    #5. Most common used words in threads
+    pass
+
+def visual_representations():
+    #Be sure to build at least four visualizations
+    #1. Thread with highest number of upvotes vs. Length of title
+    #2. Number of comments v Number of upvotes
+    #3. Comments by the hour?
+    #4. Most common used words in comments for 1 thread.
+    #5. Most common used words in threads
+    pass
 
 #INTERACTION___________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 def menu_prompt():
@@ -149,6 +264,7 @@ def menu_prompt():
 # Make sure nothing runs or prints out when this file is run as a module
 if __name__=="__main__":
     reddit_caller()
+    top_5_thread_users()
     #menu_prompt()
     #init_db()
     #interactive_prompt()
