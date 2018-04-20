@@ -108,7 +108,7 @@ def csv_loader(lst_instances):
     with cs_file:
         cols_threads = csv.writer(cs_file)
         cols_threads.writerows(lst_instances)
-    print(cols_threads)
+    # print(cols_threads)
     cs_file.close()
 
 def coms_csv_loader(lst_instances):
@@ -116,7 +116,7 @@ def coms_csv_loader(lst_instances):
     with coms_file:
         cols_comments = csv.writer(coms_file)
         cols_comments.writerows(lst_instances)
-    print(cols_comments)
+    # print(cols_comments)
     coms_file.close()
 
 
@@ -147,7 +147,7 @@ def viz_help():
     print("1 = Will display the top 5 users who have the most 'hot' threads in the current database. (If tie, alphabetically returned)")
     print("2 = Displays the hour of the day each thread was posted in a histogram (military time)")
     print("3 = Plots the total number of replies for a given thread and the number against the number of upvotes a thread has documented")
-    print("4 = Puts top 5 words across all thread titles into a pie chart, shows what proportion of top 5 each word represents")
+    print("4 = Puts top 5 words across all thread titles into a pie chart, shows what proportion of top 5 each word represents\n\n")
     print("'all' = Runs all of the above visualizations")
     print("------------------------------------------------------------------------------------")
     print("'stop' = Returns user to main menu.")
@@ -249,7 +249,7 @@ def reddit_caller(num_threads=100):
     subreddit = reddit.subreddit('StarWarsBattlefront')
 
     hot_swbf = subreddit.hot(limit=num_threads)
-    print(hot_swbf)
+    # print(hot_swbf)
 
     complete_cache_diction = {}
     complete_cache_lst = []
@@ -527,7 +527,7 @@ def most_common_thread_words():
     #Plotly information
     labels = pie_words_4
     values = pie_vals_4
-    trace = go.Pie(labels=labels, values=values, marker=dict(line=dict(color='#000000', width=2)))
+    trace = go.Pie(labels=labels, values=values, textfont=dict(size=20, color="white"), marker=dict(line=dict(color='#000000', width=2)))
 
     py.plot([trace], filename='thread_words_pie_chart')
 
