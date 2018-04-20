@@ -1,3 +1,10 @@
+pip install praw
+pip install pandas
+pip install emoji
+pip install nltk
+pip install plotly
+
+#The modules imported for the file
 import praw
 import json
 import csv

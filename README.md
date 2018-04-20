@@ -25,7 +25,17 @@ TO INCORPORATE:
 
 OTHER PROGRAMS:
 --In addition to the base files downloaded from github, the user will need Internet Access and be using plotly for the visualization component of this program. To get started with plotly a user can create an account at "https://plotl.ly". After creating an account a user should be able to execute this program successfully as long as they have a stable Internet Connection. To become more familiar with plotly a user should go to the 'Python' section of the site and become familiar with the basic command especially the 'data' and 'layout' features of a graph. Lastly, a user should will need to install and import plotly on their device. If user wishes to add graphs and features (available on plotly) one should look more into the Python graphing section of plotly. Praw is the wrapper used to help handling of Reddit API data.
+Here is what you will need to install in your virtual environment to get this to run:
+--
+pip install praw
+pip install pandas
+pip install emoji
+pip install nltk
+pip install plotly
+--
+
 Lastly, users will be using nltk for visualization 4, they may need to update/import nltk and download('stopwords') for this part to function as intended!
+
 
 
 |QUESTION.3.| Brief description of how your code is structured, including the names of significant data processing functions (just the 2-3 most important functions--not a complete list) and class definitions. If there are large data structures (e.g., lists, dictionaries) that you create to organize your data for presentation, briefly describe them.
