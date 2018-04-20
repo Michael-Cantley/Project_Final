@@ -1,10 +1,16 @@
 import unittest
 from proj_fin import *
-
+#DO 5 a piece BUT double check to make sure 45 are not necessary.
 
 class TestDataAccess(unittest.TestCase):
 
-    def test_cache_grab(self):
+    def test_cache_grab_a(self):
+        try:
+            db_cache_loader("10'Night on Endor Update Bugs and Feedback Megathread' is the thread title. \n Posted By: 'BattlefrontModTeam' on '2018-04-18 08:08:24' \n With '8d404a' as the thread id.\n\n")
+        except:
+            self.fail()
+
+    def test_cache_grab_a(self):
         try:
             db_cache_loader("10'Night on Endor Update Bugs and Feedback Megathread' is the thread title. \n Posted By: 'BattlefrontModTeam' on '2018-04-18 08:08:24' \n With '8d404a' as the thread id.\n\n")
         except:

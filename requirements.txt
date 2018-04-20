@@ -1,1 +1,18 @@
+import praw
+import json
+import csv
+import sqlite3
+import pandas
+import emoji
 import requests
+from fin_secrets import *
+import plotly.plotly as py
+import plotly.graph_objs as go
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize, word_tokenize
+
+
+import codecs
+import sys
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer)
