@@ -131,35 +131,48 @@ def ui_help():
     print("      available only if there is an active result set")
     print("      lists all Places nearby a given result")
     print("      valid inputs: an integer 1-len(result_set_size)")
-    print("map")
-    print("      available only if there is an active result set")
-    print("      displays the current results on a map")
-    print("exit")
-    print("      exits the program")
+    print("new (<#_to_pull>)")
+    print("      will call to reddit and fill the csv files and the database with current reddit threads")
+    print("      the number a user enters will pull that many threads and their affiliated comments")
+    print("      ***Will turn ON the database, so a user can now request for viualizations")
     print("help")
     print("      lists available commands (these instructions)")
+    print("exit")
+    print("      exits the program")
+    print("\n\n")
+
+#*************************************************************************************************************?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
+def viz_help():
+    print("\n\n\n\n\n")
+    print("------------------------------------------------------------------------------------")
+    print("1 = Will display the top 5 users who have the most 'hot' threads in the current database. (If tie, alphabetically returned)")
+    print("2 = RETURN 2 FINISH*********************************************************************************************************************************************************************************************************************************************************")
+
+    print("------------------------------------------------------------------------------------")
     print("\n\n")
 
 #Will connect the staged/prepared csv with the db and load the db with relevant information.
 def db_loader():
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
+    #To wipe the db clean and allow for "fresh" new data to be loaded in
+    init_db()
 
     #First load the threads into the csv using the staged csv file
     cr_file = open(CSV_STORAGE, 'r', encoding='utf-8')
     ithreads_csv = csv.reader(cr_file)
-    print(ithreads_csv)
+    # print(ithreads_csv)
     next(ithreads_csv, None)
     for thread in ithreads_csv:
-        print(thread)
-        print(type(thread))
+        # print(thread)
+        # print(type(thread))
         #emoji_dodger = (title_encoded.decode('unicode-escape'))
         insertion = (thread[0], thread[1], thread[2], thread[3], thread[4], thread[5], thread[6], thread[7])
         fill_stmt = '''
                 INSERT INTO Threads (Author, Title, Num_Upvotes, Thread_Id, Time_Created, Time_Date_Created, Hour_Created, Num_Comments)
                 SELECT ?, ?, ?, ?, ?, ?, ?, ?
                 '''
-        print(fill_stmt)
+        # print(fill_stmt)
         cur.execute(fill_stmt, insertion)
     conn.commit()
     cr_file.close()
@@ -167,11 +180,11 @@ def db_loader():
     #Now load the comments into the db using the staged csv file
     com_file = open(COM_CSV_STORAGE, 'r', encoding='utf-8')
     icomments_csv = csv.reader(com_file)
-    print(icomments_csv)
+    # print(icomments_csv)
     next(icomments_csv, None)
     for comment in icomments_csv:
-        print(comment)
-        print(type(comment))
+        # print(comment)
+        # print(type(comment))
         #['Body', 'Thread_FK', 'Author', 'Comment_id', 'Date and Time created', 'Hour created', 'Num_Replies'])
         # 'Comment_Id' INTEGER PRIMARY KEY AUTOINCREMENT,
         # 'Body' TEXT,
@@ -188,7 +201,7 @@ def db_loader():
                 INSERT INTO Comments (Body, Thread_ID, Author, Comp_Identifier, Time_Date_Created, Hour_Created, Num_Replies)
                 SELECT ?, ?, ?, ?, ?, ?, ?
                 '''
-        print(c_fill_stmt)
+        # print(c_fill_stmt)
         cur.execute(c_fill_stmt, c_insertion)
     conn.commit()
     com_file.close()
@@ -222,7 +235,8 @@ def cache_call():
         #Attempt to get a number from the cache
             try:
                 if cache_num == "stop":
-                    return("**************************************************************\nExiting Cache menu.**************************************************************\n")
+                    print("\n**************************************************************\nExiting Cache menu.\n**************************************************************\n")
+                    return "stop cache"
                 else:
                     chosen_thread = cur_cache[cache_num]
                     return chosen_thread
@@ -256,12 +270,14 @@ def reddit_caller(num_threads=10):
     complete_cache_lst = []
     #To create unique keys and set up a "Thread" Instance
     my_threads = []
+    mstr_threads_lst =[]
     mstr_comments_lst = []
+
     #To add to the Cache for the program to expedite execution
     cache_storage = []
     mstr_comments_lst.append(['Body', 'Thread_FK', 'Author', 'Comment_id', 'Date and Time created', 'Hour created', 'Num_Replies'])
-    cache_storage.append(['Author', 'Title', 'Upvotes', 'Thread_id', 'Time_created', 'Date and Time created', 'Hour created', 'Num_Comments'])
-
+    # cache_storage.append(['Author', 'Title', 'Upvotes', 'Thread_id', 'Time_created', 'Date and Time created', 'Hour created', 'Num_Comments'])
+    mstr_threads_lst.append(['Author', 'Title', 'Upvotes', 'Thread_id', 'Time_created', 'Date and Time created', 'Hour created', 'Num_Comments'])
     thread_fk = 1
     for thread in hot_swbf:
         thread_dict = {}
@@ -299,19 +315,20 @@ def reddit_caller(num_threads=10):
                         # print(reply.body) #gives the reply content
                         #print(reply.author) #gives author of reply
                         reply_ct += 1
-                    print(comment.body)
-                    print(reply_ct)
+                    # print(comment.body)
+                    # print(reply_ct)
                     #['Body', 'Thread_FK', 'Author', 'Comment_id', 'Date and Time created', 'Hour created', 'Num_Replies'])
                     c_cache_lst = [com_body_sub, com_t_fk, com_author_sub, com_id_sub, f_com_date_sub, f_com_hour_only_sub, reply_ct]
                     comments_lst.append(c_cache_lst)
                     mstr_comments_lst.append(c_cache_lst)
                 thread_dict['Comments'] = comments_lst
             except:
-                thread_dict['Comments'] = comments_lst
+                pass
+                comments_lst.append( ["Unavailable", "Unavailable", "Unavailable", "Unavailable", "Unavailable", "Unavailable"])
 
 
             # print(thread.title)
-            print('\n\n\n\n\n\n')
+            # print('\n\n\n\n\n\n')
 
             num_comments_sub = thread.num_comments
             author_sub = str(thread.author)
@@ -331,8 +348,7 @@ def reddit_caller(num_threads=10):
             #Build a list for your cache
             t_cache_list = [author_sub, title_sub, ups_sub, id_sub, time_made_sub, f_date_sub, f_hour_only_sub, num_comments_sub]
             cache_storage.append(t_cache_list)
-            thread_dict['Threads'] = cache_storage
-            complete_cache_lst.append(thread_dict)
+            mstr_threads_lst.append(t_cache_list)
             thread_fk += 1
         except:
             pass
@@ -343,10 +359,13 @@ def reddit_caller(num_threads=10):
     #Establish a unique Identifier for the returned "fresh request" by applying the class string for threads.
     #After getting unique ID throw the json formatted information into a cache.
     u_thread_ident = (my_threads[0].__str__())
+    u_thread_ident = (str(num_threads) + " -number of threads\n" + u_thread_ident)
+    complete_cache_diction['Threads'] = mstr_threads_lst
+    complete_cache_diction['Comments'] = mstr_comments_lst
     #Load the dictionary into the cache so it can be parsed between threads and affiliated comments.
     # cache_diction['threads'] = cache_storage
     # cache_diction['comments'] = comments_lst
-    CACHE_DICTION[u_thread_ident] = complete_cache_lst
+    CACHE_DICTION[u_thread_ident] = complete_cache_diction
     dumped_json_cache = json.dumps(CACHE_DICTION)
     fw = open(CACHE_FNAME,"w")
     fw.write(dumped_json_cache)
@@ -358,29 +377,79 @@ def reddit_caller(num_threads=10):
     # fw.close() # Close the open file
 
     #Continue on and write this information directly to CSV and load the CSV into the sqlite db
-    csv_loader(cache_storage)
+    csv_loader(mstr_threads_lst)
     coms_csv_loader(mstr_comments_lst)
     db_loader()
 
-def cache_loader(cache_needed):
-    print(cache_needed)
+
+def db_cache_loader(cache_needed):
+    # print(cache_needed)
     cache_file = open(CACHE_FNAME, 'r')
     cache_contents = cache_file.read()
     CACHE_DICTION = json.loads(cache_contents)
     cache_file.close()
     cache_want = CACHE_DICTION[cache_needed]
-    print('\n\n\n\n\n\n\n')
-    print(cache_want)
-
-    for row in cache_want:
-        print(row)
-        print(type(row))
+    # print('\n\n\n\n\n\n\n')
+    # print(cache_want['Threads'])
+    threads_specd = cache_want['Threads']
+    comments_specd = cache_want['Comments']
+    # print('\n\n\n\n\n\n\n')
+    csv_loader(threads_specd)
+    coms_csv_loader(comments_specd)
+    db_loader()
+    # for row in cache_want:
+    #     print(row)
+    #     print(type(row))
 
     pass
     #PULL UP CACHED DATA BASED ON MENU COMMAND MANNNNNN
 
 
 #VISUALIZATION____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+def visual_rep_menu():
+    #Be sure to build at least four visualizations
+    print("******************************************************************************************************************************************\nWELCOME TO THE VISUALIZATION MENU\n******************************************************************************************************************************************")
+    visualization_req = ""
+    while visualization_req != "stop":
+        viz_help()
+        visualization_req = input("\nPlease enter a visualization # for your data to display.\n\n(Type 'all' to run all visualizations OR type 'stop' to exit the visualization menu)\n\nEnter visualization: ")
+        if visualization_req == "stop":
+            print("Exiting Visualization Menu...\n\n-----------------------------")
+            return
+        # elif visulization_req == "help":
+        #     viz_help()
+        elif visualization_req == "1":
+            print(visualization_req)
+            top_5_thread_users()
+        elif visualization_req == "2":
+            print(visualization_req)
+            hours_post_thread()
+        elif visualization_req == "3":
+            print(visualization_req)
+            tot_replies_v_thrd_upvotes()
+        elif visualization_req == "4":
+            print(visualization_req)
+        # elif visualization_req == "5":
+        #     print(visualization_req)
+        elif visualization_req == "all":
+            print(visualization_req)
+            top_5_thread_users() #Run viz 1
+            hours_post_thread() #Run viz 2
+            tot_replies_v_thrd_upvotes() #Run viz 3
+        else:
+            print("ERROR. Invalid Command, Try again.")
+        #1. Thread with highest number of upvotes vs. Length of title
+        #2. Number of comments v Number of upvotes
+        #3. Comments by the hour?
+        #4. Most common used words in comments for 1 thread.
+        #5. Most common used words in threads
+    #1. Thread with highest number of upvotes vs. Length of title
+    #2. Number of comments v Number of upvotes... x+y
+    #3. Comments by the hour?
+    #4. Most common used words in comments for 1 thread.
+    #5. Most common used words in threads
+    pass
+
 def top_5_thread_users():
     conn = sqlite3.connect(DBNAME)
     cur = conn.cursor()
@@ -395,15 +464,15 @@ def top_5_thread_users():
         '''
     cur.execute(top_user_threads)
     for user_thread_ct in cur:
-        print(user_thread_ct)
+        # print(user_thread_ct)
         users_1.append(user_thread_ct[0])
         thread_ct_1.append(user_thread_ct[1])
     conn.close()
     #The visualization steps are below which pass the top 5 to plotly to create a bar graph
-    print('\n\n\n\n\n\'')
-    print(users_1)
-    print('\n\n\n\n\n\'')
-    print(thread_ct_1)
+    # print('\n\n\n\n\n\'')
+    # print(users_1)
+    # print('\n\n\n\n\n\'')
+    # print(thread_ct_1)
     users_1_top5 = users_1[:5]
     thread_ct_1_top5 = thread_ct_1[:5]
     #Potentially append here??
@@ -418,40 +487,117 @@ def top_5_thread_users():
     fig = go.Figure(data=data, layout=layout)
     py.plot(fig, filename='text-hover-bar')
 
+
     # py.plot(data, filename='basic-bar')
 
     #Be sure to build at least four visualizations
     #1. Thread with highest number of upvotes vs. Length of title
-    #2. Number of comments v Number of upvotes
-    #3. Comments by the hour?----lAST
-    #4. Most common used words in comments for 1 thread.
+    #2. Number of comments v Number of upvotes (Scatter)
+    #3. Comments by the hour?----lAST ()
+    #4. Most common used words in comments for 1 thread. (need to process then basic bar to start... maybe pie)
     #5. Most common used words in threads
     pass
 
+def hours_post_thread():
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
+    #Alphabettically ordred top users to prep for loading into a bar chart in plotly
+    hours_2 = []
+    num_threads_2 = []
+    hours_posted_threads = '''
+        SELECT t.Hour_Created
+        FROM Threads AS t
+        '''
+    cur.execute(hours_posted_threads)
+    for hour_post_ct in cur:
+        # print(user_thread_ct)
+        hours_2.append(hour_post_ct[0])
+        # num_threads_2.append(hour_post_ct[1])
+    conn.close()
+    print(hours_2)
+
+    data = [go.Histogram(x=hours_2, xbins=dict(start=0, size=4, end=23))]
+
+    layout = go.Layout(title='Time posted for threads of interest', xaxis=dict(title='Hour of Day (Military Time)'), yaxis=dict(title='Number of threads posted at this time'), bargap=0.05,)
+
+    fig = go.Figure(data=data, layout=layout)
+    py.plot(fig, filename='basic historgram')
+
+#Visualization 3
+def tot_replies_v_thrd_upvotes():
+    conn = sqlite3.connect(DBNAME)
+    cur = conn.cursor()
+    #Alphabettically ordred top users to prep for loading into a bar chart in plotly
+    rthrd_upvotes_3 = []
+    replies_thread_3 = []
+    repz_v_upvotes = '''
+        SELECT t.title, t.Num_Upvotes, SUM(c.Num_Replies)
+        FROM Threads AS t JOIN Comments AS c
+	           ON t.Id=c.Thread_ID
+        GROUP BY c.Thread_ID
+        '''
+    cur.execute(repz_v_upvotes)
+    for rep_ups_ct in cur:
+        # print(user_thread_ct)
+        rthrd_upvotes_3.append(rep_ups_ct[1])
+        replies_thread_3.append(rep_ups_ct[2])
+        # num_threads_2.append(hour_post_ct[1])
+    conn.close()
+    # print(hours_2)
+######################
+    trace = go.Scatter(
+        x = rthrd_upvotes_3,
+        y = replies_thread_3,
+        mode = 'markers'
+    )
+
+    data = [trace]
+    # Plot and embed in ipython notebook!
+    py.plot(data, filename='basic-scatter')
+
+##############################################
+
 def visual_representations():
-    #Be sure to build at least four visualizations
-    #1. Thread with highest number of upvotes vs. Length of title
-    #2. Number of comments v Number of upvotes
-    #3. Comments by the hour?
-    #4. Most common used words in comments for 1 thread.
-    #5. Most common used words in threads
     pass
+    #Be sure to build at least four visualizations
+
 
 #INTERACTION___________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 def menu_prompt():
     response = ''
+    db = False
     while response != 'exit':
-        response = input('Enter a command: ')
+        if db == False:
+            response = input('Enter a command: ')
 
-        if response == 'exit':
-            print("Exiting Program...")
-        elif response == 'cache':
-            now_cache = cache_call()
-            print("\n\n")
-            print(now_cache)
-            cache_loader(now_cache)
-        elif response == 'new':
-            reddit_caller()
+            if response == 'exit':
+                print("Exiting Program...")
+            elif response == 'help':
+                ui_help()
+            elif response == 'cache':
+                now_cache = cache_call()
+                # print("\n\n")
+                # print(now_cache)
+                if now_cache != "stop cache":
+                    db_cache_loader(now_cache)
+                    db = True
+                else:
+                    print("Returning to Main Menu!")
+            elif response[:3] == 'new':
+                try:
+                    my_num = int(response[4:])
+                    reddit_caller(my_num)
+                    db = True
+                except:
+                    print("Returning default value of 100 threads")
+                    reddit_caller()
+                    db = True
+            else:
+                print("Command Not recognized" + response)
+        else:
+            visual_rep_menu()
+            db = False
+
 
 
 #FILE CONTROlS___________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -462,3 +608,19 @@ if __name__=="__main__":
     menu_prompt()
     #init_db()
     #interactive_prompt()
+
+
+    # print(num_threads_2)
+    # my_lst = []
+    # index_num_t = 0
+    # for i in hours_2:
+    #     num_to_repeat = num_threads_2[index_num_t]
+    #     my_lst = itertools.repeat(i, num_to_repeat)
+    #     index_num_t += 1
+    #     print(my_lst)
+    #     # num_t_num = int(num_threads_2[i])
+    #     # my_lst = [i] *num_t_num
+    # print(my_lst)
+
+
+    # x = hours_2
