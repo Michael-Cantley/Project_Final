@@ -69,7 +69,6 @@ def init_db():
     cur.execute(del_comments)
     conn.commit()
 
-
     stmnt_thread = '''
         CREATE TABLE IF NOT EXISTS 'Threads'(
         'Id' INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -109,7 +108,6 @@ def csv_loader(lst_instances):
     with cs_file:
         cols_threads = csv.writer(cs_file)
         cols_threads.writerows(lst_instances)
-    # print(cols_threads)
     cs_file.close()
 
 def coms_csv_loader(lst_instances):
@@ -117,7 +115,6 @@ def coms_csv_loader(lst_instances):
     with coms_file:
         cols_comments = csv.writer(coms_file)
         cols_comments.writerows(lst_instances)
-    # print(cols_comments)
     coms_file.close()
 
 
@@ -163,8 +160,6 @@ def db_loader():
     #First load the threads into the csv using the staged csv file
     cr_file = open(CSV_STORAGE, 'r', encoding='utf-8')
     ithreads_csv = csv.reader(cr_file)
-    # print(ithreads_csv)
-    #emoji_dodger = (title_encoded.decode('unicode-escape'))
     next(ithreads_csv, None)
     for thread in ithreads_csv:
         insertion = (thread[0], thread[1], thread[2], thread[3], thread[4], thread[5], thread[6], thread[7])
@@ -210,7 +205,6 @@ def cache_call():
         json_read = json.loads(my_read)
         cache_keys = json_read.keys()
         cur_cache = dict_maker(cache_keys)
-        # print(cur_cache)
         keys = cur_cache.keys()
         for key in keys:
             print("Thread number: " + key + "\n" + "Thread_stored (Username/Time_posted): " + cur_cache[key])
@@ -230,7 +224,6 @@ def cache_call():
                 print("Sorry that is not a valid selection. Pick a number in the cache list.\n")
         fw.close() # Close the open file
     except:
-        # print("Currently No Cache...'refresh' or 'run' a search to establish a Cache.")
         return "Currently No Cache...'refresh' or 'run' a search to establish a Cache."
 
 
@@ -249,7 +242,7 @@ def reddit_caller(num_threads=100):
     subreddit = reddit.subreddit('StarWarsBattlefront')
 
     hot_swbf = subreddit.hot(limit=num_threads)
-    # print(hot_swbf)
+
 
     complete_cache_diction = {}
     complete_cache_lst = []
@@ -346,7 +339,6 @@ def reddit_caller(num_threads=100):
 
 
 def db_cache_loader(cache_needed):
-    # print(cache_needed)
     cache_file = open(CACHE_FNAME, 'r')
     cache_contents = cache_file.read()
     CACHE_DICTION = json.loads(cache_contents)
@@ -372,8 +364,6 @@ def visual_rep_menu():
         if visualization_req == "stop":
             print("Exiting Visualization Menu...\n\n-----------------------------")
             return
-        # elif visulization_req == "help":
-        #     viz_help()
         elif visualization_req == "1":
             print(visualization_req)
             top_5_thread_users()
@@ -386,8 +376,6 @@ def visual_rep_menu():
         elif visualization_req == "4":
             print(visualization_req)
             most_common_thread_words()
-        # elif visualization_req == "5":
-        #     print(visualization_req)
         elif visualization_req == "all":
             print(visualization_req)
             top_5_thread_users() #Run viz 1
@@ -540,6 +528,7 @@ def menu_prompt():
     db = False
     while response != 'exit':
         if db == False:
+            print('\nPlease pick a command or enter "help" to see commands.')
             response = input('Enter a command: ')
 
             if response == 'exit':
@@ -569,13 +558,10 @@ def menu_prompt():
             db = False
 
 
-#FILE CONTROlS____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+#FILE_CONTROlS______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 # Make sure nothing runs or prints out when this file is run as a module
 if __name__=="__main__":
     menu_prompt()
-    #init_db()
-    #interactive_prompt()
-    # reddit_caller(2)
-    # top_5_thread_users()
+
 
 #End of File
